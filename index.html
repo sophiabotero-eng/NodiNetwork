@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ArchNodi</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <header>
+    <h1>ArchNodi</h1>
+    <p>Learn CAD. Build your portfolio. Connect.</p>
+  </header>
+
+  <section class="hero">
+    <h2>For architecture students who want to get ahead</h2>
+    <button onclick="scrollToTutorials()">Browse Tutorials</button>
+  </section>
+
+  <section id="tutorials">
+    <h2>Free Tutorials</h2>
+
+    <div class="card">
+      <h3>Rhino Basics</h3>
+      <p>Intro to modeling</p>
+      <button onclick="watchFree()">Watch</button>
+    </div>
+
+  </section>
+
+  <section id="premium">
+    <h2>Premium Tutorials</h2>
+
+    <div class="card locked">
+      <h3>Advanced Rhino Workflow</h3>
+      <p>Full studio-level workflow</p>
+      <button onclick="unlock()">Unlock</button>
+    </div>
+
+  </section>
+
+  <footer>
+    <p>© ArchNodi</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

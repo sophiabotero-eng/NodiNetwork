@@ -1,0 +1,42 @@
+body {
+  font-family: Arial;
+  margin: 0;
+  background: #f5f5f5;
+}
+
+header {
+  background: black;
+  color: white;
+  text-align: center;
+  padding: 2rem;
+}
+
+.hero {
+  text-align: center;
+  padding: 3rem;
+}
+
+button {
+  padding: 10px 20px;
+  background: black;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.card {
+  background: white;
+  margin: 1rem auto;
+  padding: 1rem;
+  max-width: 300px;
+  border-radius: 10px;
+}
+
+.locked {
+  opacity: 0.5;
+}
+
+section {
+  padding: 2rem;
+  text-align: center;
+}

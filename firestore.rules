@@ -79,4 +79,32 @@ match /databases/{database}/documents {
     ]);
     allow create, delete: if false;
   }
+
+  // ---- Phase 2: Portfolio System ----
+
+  match /projects/{projectId} {
+    // Published projects are public (they're the point of a portfolio
+    // product); drafts are only visible to their owner. Only the owner
+    // can write, and `viewCount` is locked out of client writes — it's
+    // bumped via a Cloud Function-safe increment call from
+    // ProjectRepository.incrementViewCount, but since that still goes
+    // through the client SDK (not Admin SDK), we allow *that one field*
+    // to change via FieldValue.increment while everything else must stay
+    // owner-only. Anyone signed in may bump the view counter (viewing
+    // someone else's project shouldn't require write access to the rest
+    // of the doc).
+    allow read: if resource.data.status == 'published' || isOwner(resource.data.ownerId);
+
+    allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+
+    allow update: if (isOwner(resource.data.ownerId) && unchanged(['ownerId', 'viewCount']))
+      || (isSignedIn() && unchanged([
+           'ownerId', 'ownerUsername', 'ownerDisplayName', 'ownerPhotoURL', 'title',
+           'projectDescription', 'tags', 'softwareUsed', 'year', 'collaboratorIds',
+           'collaboratorNames', 'coverImageURL', 'mediaItems', 'status', 'searchKeywords',
+           'createdAt', 'updatedAt'
+         ]));
+
+    allow delete: if isOwner(resource.data.ownerId);
+  }
 }

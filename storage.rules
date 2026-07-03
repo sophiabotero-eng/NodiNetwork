@@ -35,5 +35,29 @@ service firebase.storage {
       allow write: if isOwner(uid) && isImage() && request.resource.size < 20 * 1024 * 1024;
       allow delete: if isOwner(uid);
     }
+
+    // ---- Phase 2: Portfolio System ----
+
+    match /project_media/images/{uid}/{fileName} {
+      allow read: if true;
+      allow write: if isOwner(uid) && isImage() && request.resource.size < 25 * 1024 * 1024;
+      allow delete: if isOwner(uid);
+    }
+
+    match /project_media/videos/{uid}/{fileName} {
+      allow read: if true;
+      allow write: if isOwner(uid)
+        && request.resource.contentType.matches('video/.*')
+        && request.resource.size < 500 * 1024 * 1024;
+      allow delete: if isOwner(uid);
+    }
+
+    match /project_media/documents/{uid}/{fileName} {
+      allow read: if true;
+      allow write: if isOwner(uid)
+        && request.resource.contentType == 'application/pdf'
+        && request.resource.size < 50 * 1024 * 1024;
+      allow delete: if isOwner(uid);
+    }
   }
 }

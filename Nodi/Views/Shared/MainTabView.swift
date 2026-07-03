@@ -37,11 +37,15 @@ struct MainTabView: View {
             .tag(NodiTab.discover)
 
             NavigationStack {
-                ComingSoonView(
-                    icon: "square.grid.2x2",
-                    title: "Portfolio",
-                    message: "Project uploads and your portfolio grid arrive in Phase 2."
-                )
+                Group {
+                    if let uid = session.currentUser?.id {
+                        ScrollView {
+                            PortfolioGridView(ownerId: uid, isOwnProfile: true)
+                                .padding(NodiSpacing.lg)
+                        }
+                    }
+                }
+                .background(NodiColor.background)
                 .navigationTitle("Portfolio")
             }
             .tabItem { Label("Portfolio", systemImage: "square.grid.2x2") }

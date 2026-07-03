@@ -32,7 +32,8 @@ struct ProfileView: View {
                             softwareSection(user)
                         }
 
-                        PortfolioPlaceholderSection()
+                        PortfolioGridView(ownerId: viewModel.userId, isOwnProfile: viewModel.isOwnProfile)
+                            .padding(.top, NodiSpacing.sm)
                     }
                     .padding(.horizontal, NodiSpacing.lg)
                 } else if viewModel.isLoading {
@@ -206,15 +207,6 @@ private struct AvailabilityDot: View {
 
     var body: some View {
         Circle().fill(color).frame(width: 8, height: 8)
-    }
-}
-
-/// Portfolio grid is built out in Phase 2 (`PortfolioGridView`). This
-/// placeholder keeps the profile screen honest about what's implemented
-/// so far rather than faking project data.
-private struct PortfolioPlaceholderSection: View {
-    var body: some View {
-        EmptyView()
     }
 }
 

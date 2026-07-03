@@ -32,6 +32,8 @@ struct EditProfileView: View {
                         NodiTextField(title: "Bio", text: $viewModel.bio)
                         NodiTextField(title: "Profession", text: $viewModel.profession)
                         NodiTextField(title: "Location", text: $viewModel.location)
+                        NodiTextField(title: "School", text: $viewModel.school)
+                        NodiTextField(title: "Current Company", text: $viewModel.currentCompany)
 
                         VStack(alignment: .leading, spacing: NodiSpacing.xs) {
                             Text("AVAILABILITY").font(NodiFont.caption(.semibold)).foregroundStyle(NodiColor.secondaryText)

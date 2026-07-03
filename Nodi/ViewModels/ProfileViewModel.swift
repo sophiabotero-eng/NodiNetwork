@@ -7,6 +7,8 @@ final class ProfileViewModel: ObservableObject {
     @Published var user: NodiUser?
     @Published var isLoading = false
     @Published var errorMessage: String?
+    @Published private(set) var isFollowing = false
+    @Published private(set) var isUpdatingFollow = false
 
     private var listener: ListenerRegistration?
     let userId: String
@@ -26,6 +28,29 @@ final class ProfileViewModel: ObservableObject {
         listener = UserRepository.shared.observeUser(uid: userId) { [weak self] user in
             self?.user = user
             self?.isLoading = false
+        }
+    }
+
+    func loadFollowState(currentUserId: String?) async {
+        guard !isOwnProfile, let currentUserId else { return }
+        isFollowing = (try? await FollowRepository.shared.isFollowing(followerId: currentUserId, followingId: userId)) ?? false
+    }
+
+    func toggleFollow(currentUserId: String?) async {
+        guard !isOwnProfile, let currentUserId else { return }
+        isUpdatingFollow = true
+        defer { isUpdatingFollow = false }
+
+        do {
+            if isFollowing {
+                try await FollowRepository.shared.unfollow(followerId: currentUserId, followingId: userId)
+                isFollowing = false
+            } else {
+                try await FollowRepository.shared.follow(followerId: currentUserId, followingId: userId)
+                isFollowing = true
+            }
+        } catch {
+            errorMessage = error.localizedDescription
         }
     }
 }

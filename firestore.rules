@@ -107,4 +107,51 @@ match /databases/{database}/documents {
 
     allow delete: if isOwner(resource.data.ownerId);
   }
+
+  // ---- Phase 3: Networking (NFC + Connections) ----
+
+  // Doc ID is "{followerId}_{followingId}" — see Follow.documentId — so a
+  // duplicate follow relationship is structurally impossible rather than
+  // something rules have to police, and unfollow is just "delete the doc
+  // whose ID you can already compute."
+  match /follows/{followId} {
+    allow read: if isSignedIn();
+    allow create: if isSignedIn()
+      && request.resource.data.followerId == request.auth.uid
+      && followId == request.resource.data.followerId + '_' + request.resource.data.followingId;
+    allow delete: if isSignedIn() && resource.data.followerId == request.auth.uid;
+    allow update: if false;
+  }
+
+  // Doc ID is "{uidA}_{uidB}" sorted — see Connection.documentId — for the
+  // same duplicate-prevention reason. `followerCount`/`followingCount` on
+  // the user doc and `connectionCount` are never touched here; only the
+  // onFollowCreated/onConnectionCreated/onConnectionUpdated Cloud
+  // Functions increment them (Admin SDK, bypasses these rules), so a
+  // client can't inflate its own numbers by spamming requests.
+  match /connections/{connectionId} {
+    allow read: if isSignedIn() && request.auth.uid in resource.data.participantIds;
+
+    allow create: if isSignedIn()
+      && request.auth.uid in request.resource.data.participantIds
+      && request.resource.data.requestedBy == request.auth.uid
+      && connectionId == request.resource.data.participantIds[0] + '_' + request.resource.data.participantIds[1]
+      // NFC connections are created already-accepted (physical proximity
+      // is the consent signal); every other source must start pending —
+      // you can't will your own connection request into being instantly
+      // accepted by setting the field client-side.
+      && (request.resource.data.status == 'pending' || request.resource.data.source == 'nfc_tag');
+
+    // Only the *other* participant can accept/decline a pending request —
+    // the requester can't accept their own request. Nothing else about
+    // the document may change on a response.
+    allow update: if isSignedIn()
+      && request.auth.uid in resource.data.participantIds
+      && request.auth.uid != resource.data.requestedBy
+      && resource.data.status == 'pending'
+      && request.resource.data.status in ['accepted', 'declined']
+      && unchanged(['participantIds', 'participants', 'requestedBy', 'type', 'source', 'createdAt']);
+
+    allow delete: if false;
+  }
 }

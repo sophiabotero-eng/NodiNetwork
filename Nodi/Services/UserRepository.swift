@@ -98,6 +98,36 @@ final class UserRepository {
         return snapshot.documents.compactMap { try? $0.data(as: NodiUser.self) }
     }
 
+    /// A broad, recently-active pool for Discovery to filter client-side
+    /// (profession/location/school/company/software/availability). Firestore
+    /// can't efficiently combine that many facets server-side without a
+    /// dedicated search index (Algolia/Typesense would be the real answer
+    /// at scale — see README); this is the honest, working answer for a
+    /// launch-scale user base.
+    func fetchDiscoveryPool(limit: Int = 300) async throws -> [NodiUser] {
+        let snapshot = try await usersCollection
+            .order(by: "lastActiveAt", descending: true)
+            .limit(to: limit)
+            .getDocuments()
+        return snapshot.documents.compactMap { try? $0.data(as: NodiUser.self) }
+    }
+
+    /// Prefix range query on `geohash` — the standard Firestore geo-query
+    /// workaround. Returns an approximate bounding box, not an exact
+    /// radius; callers should still sort/filter by real distance
+    /// client-side using the raw lat/lng also stored on the doc.
+    func fetchUsers(geohashPrefix: String, limit: Int = 100) async throws -> [NodiUser] {
+        guard !geohashPrefix.isEmpty else { return [] }
+        let start = geohashPrefix
+        let end = geohashPrefix + "~" // '~' sorts after all geohash base32 chars
+        let snapshot = try await usersCollection
+            .whereField("geohash", isGreaterThanOrEqualTo: start)
+            .whereField("geohash", isLessThan: end)
+            .limit(to: limit)
+            .getDocuments()
+        return snapshot.documents.compactMap { try? $0.data(as: NodiUser.self) }
+    }
+
     func observeUser(uid: String, onChange: @escaping (NodiUser?) -> Void) -> ListenerRegistration {
         usersCollection.document(uid).addSnapshotListener { snapshot, _ in
             guard let snapshot, snapshot.exists else {

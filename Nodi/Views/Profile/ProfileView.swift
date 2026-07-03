@@ -3,8 +3,11 @@ import SwiftUI
 struct ProfileView: View {
     @EnvironmentObject private var session: SessionStore
     @StateObject private var viewModel: ProfileViewModel
+    @EnvironmentObject private var connectViewModel: ConnectViewModel
+    @StateObject private var notificationsViewModel = NotificationsViewModel()
     @State private var showingEditProfile = false
     @State private var showingSettings = false
+    @State private var showingNotifications = false
 
     init(userId: String, isOwnProfile: Bool) {
         _viewModel = StateObject(wrappedValue: ProfileViewModel(userId: userId, isOwnProfile: isOwnProfile))
@@ -47,6 +50,18 @@ struct ProfileView: View {
             if viewModel.isOwnProfile {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
+                        showingNotifications = true
+                    } label: {
+                        ZStack(alignment: .topTrailing) {
+                            Image(systemName: "bell")
+                            if notificationsViewModel.unreadCount > 0 {
+                                Circle().fill(NodiColor.danger).frame(width: 8, height: 8).offset(x: 4, y: -2)
+                            }
+                        }
+                    }
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
                         showingSettings = true
                     } label: {
                         Image(systemName: "gearshape")
@@ -62,8 +77,20 @@ struct ProfileView: View {
         .sheet(isPresented: $showingSettings) {
             SettingsView()
         }
+        .sheet(isPresented: $showingNotifications) {
+            NotificationsView()
+        }
         .onAppear {
             viewModel.startObserving()
+            Task { await viewModel.loadFollowState(currentUserId: session.currentUser?.id) }
+            if viewModel.isOwnProfile {
+                notificationsViewModel.startObserving()
+            }
+        }
+        .onDisappear {
+            if viewModel.isOwnProfile {
+                notificationsViewModel.stopObserving()
+            }
         }
     }
 
@@ -110,6 +137,24 @@ struct ProfileView: View {
                     showingEditProfile = true
                 }
                 .fixedSize()
+            } else {
+                HStack(spacing: NodiSpacing.xs) {
+                    NodiButton(title: "Connect", kind: .secondary) {
+                        connectViewModel.resolvedTargetUser = user
+                        connectViewModel.resolvedSource = .manualRequest
+                        connectViewModel.showingConfirmSheet = true
+                    }
+                    .fixedSize()
+
+                    NodiButton(
+                        title: viewModel.isFollowing ? "Following" : "Follow",
+                        kind: viewModel.isFollowing ? .secondary : .primary,
+                        isLoading: viewModel.isUpdatingFollow
+                    ) {
+                        Task { await viewModel.toggleFollow(currentUserId: session.currentUser?.id) }
+                    }
+                    .fixedSize()
+                }
             }
         }
     }
@@ -214,5 +259,6 @@ private struct AvailabilityDot: View {
     NavigationStack {
         ProfileView(userId: "preview", isOwnProfile: true)
             .environmentObject(SessionStore())
+            .environmentObject(ConnectViewModel())
     }
 }

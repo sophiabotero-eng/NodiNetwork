@@ -14,6 +14,8 @@ final class EditProfileViewModel: ObservableObject {
     @Published var instagramHandle: String
     @Published var linkedInHandle: String
     @Published var behanceHandle: String
+    @Published var school: String
+    @Published var currentCompany: String
     @Published var availability: AvailabilityStatus
     @Published var selectedSoftware: [String]
     @Published var softwareInput = ""
@@ -41,6 +43,8 @@ final class EditProfileViewModel: ObservableObject {
         self.instagramHandle = user.instagramHandle
         self.linkedInHandle = user.linkedInHandle
         self.behanceHandle = user.behanceHandle
+        self.school = user.school
+        self.currentCompany = user.currentCompany
         self.availability = user.availability
         self.selectedSoftware = user.softwareUsed
         self.existingProfilePhotoURL = user.profilePhotoURL
@@ -105,6 +109,8 @@ final class EditProfileViewModel: ObservableObject {
                 "instagramHandle": instagramHandle,
                 "linkedInHandle": linkedInHandle,
                 "behanceHandle": behanceHandle,
+                "school": school,
+                "currentCompany": currentCompany,
                 "availability": availability.rawValue,
                 "softwareUsed": selectedSoftware,
                 "searchKeywords": NodiUser.buildSearchKeywords(

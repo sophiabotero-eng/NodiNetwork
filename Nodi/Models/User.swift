@@ -16,6 +16,13 @@ struct NodiUser: Identifiable, Codable, Equatable, Hashable {
     var linkedInHandle: String
     var behanceHandle: String
 
+    /// Added in Phase 3 to support Discovery's "school"/"company" filters,
+    /// which the spec calls for but Phase 1's onboarding never collects.
+    /// Optional and editable from Edit Profile rather than onboarding, so
+    /// they don't force new users through more steps to get in the door.
+    var school: String
+    var currentCompany: String
+
     var profilePhotoURL: String?
     var coverImageURL: String?
 
@@ -57,6 +64,8 @@ struct NodiUser: Identifiable, Codable, Equatable, Hashable {
         case instagramHandle
         case linkedInHandle
         case behanceHandle
+        case school
+        case currentCompany
         case profilePhotoURL
         case coverImageURL
         case softwareUsed
@@ -93,6 +102,8 @@ struct NodiUser: Identifiable, Codable, Equatable, Hashable {
             instagramHandle: "",
             linkedInHandle: "",
             behanceHandle: "",
+            school: "",
+            currentCompany: "",
             profilePhotoURL: nil,
             coverImageURL: nil,
             softwareUsed: [],

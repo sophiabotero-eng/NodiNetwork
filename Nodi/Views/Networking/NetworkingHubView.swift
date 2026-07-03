@@ -11,19 +11,32 @@ struct NetworkingHubView: View {
         case discover = "Discover"
         case connect = "Connect"
         case requests = "Requests"
-        case network = "My Network"
+        case network = "Network"
+        case forYou = "For You"
+        case events = "Events"
     }
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                Picker("", selection: $section) {
-                    ForEach(Section.allCases, id: \.self) { item in
-                        Text(badgedTitle(for: item)).tag(item)
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: NodiSpacing.xs) {
+                        ForEach(Section.allCases, id: \.self) { item in
+                            Button {
+                                section = item
+                            } label: {
+                                Text(badgedTitle(for: item))
+                                    .font(NodiFont.subheadline(.semibold))
+                                    .padding(.horizontal, NodiSpacing.sm)
+                                    .padding(.vertical, NodiSpacing.xs)
+                                    .background(section == item ? NodiColor.accent : NodiColor.secondaryBackground)
+                                    .foregroundStyle(section == item ? .white : NodiColor.primaryText)
+                                    .clipShape(Capsule())
+                            }
+                        }
                     }
+                    .padding(.horizontal, NodiSpacing.lg)
                 }
-                .pickerStyle(.segmented)
-                .padding(.horizontal, NodiSpacing.lg)
                 .padding(.top, NodiSpacing.sm)
 
                 switch section {
@@ -35,6 +48,10 @@ struct NetworkingHubView: View {
                     ConnectionRequestsView()
                 case .network:
                     ConnectionsListView()
+                case .forYou:
+                    RecommendationsView()
+                case .events:
+                    EventsView()
                 }
             }
             .background(NodiColor.background)

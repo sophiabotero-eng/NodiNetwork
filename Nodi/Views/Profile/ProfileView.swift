@@ -9,7 +9,19 @@ struct ProfileView: View {
     @State private var showingSettings = false
     @State private var showingNotifications = false
     @State private var showingGraph = false
+    @State private var showingAnalytics = false
+    @State private var activeConversation: ActiveConversation?
+    @State private var isStartingConversation = false
+    @State private var selectedTeamMemberId: IdentifiableID?
     @GestureState private var pinchOutProgress: CGFloat = 0
+
+    private struct ActiveConversation: Identifiable {
+        let id: String
+    }
+
+    private struct IdentifiableID: Identifiable {
+        let id: String
+    }
 
     init(userId: String, isOwnProfile: Bool) {
         _viewModel = StateObject(wrappedValue: ProfileViewModel(userId: userId, isOwnProfile: isOwnProfile))
@@ -36,6 +48,10 @@ struct ProfileView: View {
 
                         if !user.softwareUsed.isEmpty {
                             softwareSection(user)
+                        }
+
+                        if user.accountType != .individual, !user.teamMemberIds.isEmpty {
+                            teamMembersSection(user)
                         }
 
                         PortfolioGridView(ownerId: viewModel.userId, isOwnProfile: viewModel.isOwnProfile)
@@ -71,6 +87,13 @@ struct ProfileView: View {
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
+                        showingAnalytics = true
+                    } label: {
+                        Image(systemName: "chart.bar")
+                    }
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
                         showingSettings = true
                     } label: {
                         Image(systemName: "gearshape")
@@ -83,11 +106,23 @@ struct ProfileView: View {
                 EditProfileView(user: user)
             }
         }
+        .sheet(isPresented: $showingAnalytics) {
+            if let user = viewModel.user {
+                AnalyticsView(user: user)
+            }
+        }
         .sheet(isPresented: $showingSettings) {
             SettingsView()
         }
         .sheet(isPresented: $showingNotifications) {
             NotificationsView()
+        }
+        .sheet(item: $activeConversation) { conversation in
+            if let uid = session.currentUser?.id {
+                NavigationStack {
+                    ChatView(conversationId: conversation.id, currentUserId: uid)
+                }
+            }
         }
         .onAppear {
             viewModel.startObserving()
@@ -148,6 +183,16 @@ struct ProfileView: View {
                 .fixedSize()
             } else {
                 HStack(spacing: NodiSpacing.xs) {
+                    Button {
+                        Task { await startConversation(with: user) }
+                    } label: {
+                        Image(systemName: "bubble.left")
+                            .frame(width: 36, height: 36)
+                            .background(NodiColor.secondaryBackground)
+                            .clipShape(Circle())
+                            .foregroundStyle(NodiColor.primaryText)
+                    }
+
                     NodiButton(title: "Connect", kind: .secondary) {
                         connectViewModel.resolvedTargetUser = user
                         connectViewModel.resolvedSource = .manualRequest
@@ -217,6 +262,31 @@ struct ProfileView: View {
         }
     }
 
+    private func teamMembersSection(_ user: NodiUser) -> some View {
+        VStack(alignment: .leading, spacing: NodiSpacing.xs) {
+            Text(user.accountType == .studio ? "Studio Members" : "Team").font(NodiFont.title2())
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: NodiSpacing.md) {
+                    ForEach(Array(zip(user.teamMemberIds, user.teamMemberNames)), id: \.0) { id, name in
+                        Button {
+                            selectedTeamMemberId = IdentifiableID(id: id)
+                        } label: {
+                            VStack(spacing: 4) {
+                                NodiAvatarView(urlString: nil, size: 56)
+                                Text(name).font(NodiFont.caption()).foregroundStyle(NodiColor.primaryText)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        .sheet(item: $selectedTeamMemberId) { wrapper in
+            NavigationStack {
+                ProfileView(userId: wrapper.id, isOwnProfile: wrapper.id == session.currentUser?.id)
+            }
+        }
+    }
+
     private func softwareSection(_ user: NodiUser) -> some View {
         FlowLayout(spacing: NodiSpacing.xs) {
             ForEach(user.softwareUsed, id: \.self) { software in
@@ -228,6 +298,16 @@ struct ProfileView: View {
                     .clipShape(Capsule())
                     .foregroundStyle(NodiColor.secondaryText)
             }
+        }
+    }
+
+    private func startConversation(with otherUser: NodiUser) async {
+        guard let currentUser = session.currentUser, !isStartingConversation else { return }
+        isStartingConversation = true
+        defer { isStartingConversation = false }
+        if let conversation = try? await MessageRepository.shared.getOrCreateConversation(currentUser: currentUser, otherUser: otherUser),
+           let id = conversation.id {
+            activeConversation = ActiveConversation(id: id)
         }
     }
 

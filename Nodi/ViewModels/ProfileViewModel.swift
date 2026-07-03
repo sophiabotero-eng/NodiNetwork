@@ -29,6 +29,9 @@ final class ProfileViewModel: ObservableObject {
             self?.user = user
             self?.isLoading = false
         }
+        if !isOwnProfile {
+            Task { await UserRepository.shared.incrementProfileView(uid: userId) }
+        }
     }
 
     func loadFollowState(currentUserId: String?) async {

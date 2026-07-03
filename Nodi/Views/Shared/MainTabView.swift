@@ -50,16 +50,9 @@ struct MainTabView: View {
             .tabItem { Label("Portfolio", systemImage: "square.grid.2x2") }
             .tag(NodiTab.portfolio)
 
-            NavigationStack {
-                ComingSoonView(
-                    icon: "bubble.left.and.bubble.right",
-                    title: "Messages",
-                    message: "Direct and voice messaging arrive in Phase 5."
-                )
-                .navigationTitle("Messages")
-            }
-            .tabItem { Label("Messages", systemImage: "bubble.left.and.bubble.right") }
-            .tag(NodiTab.messages)
+            MessagesListView()
+                .tabItem { Label("Messages", systemImage: "bubble.left.and.bubble.right") }
+                .tag(NodiTab.messages)
 
             NavigationStack {
                 if let uid = session.currentUser?.id {

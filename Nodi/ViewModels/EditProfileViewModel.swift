@@ -17,8 +17,18 @@ final class EditProfileViewModel: ObservableObject {
     @Published var school: String
     @Published var currentCompany: String
     @Published var availability: AvailabilityStatus
+    @Published var accountType: AccountType
     @Published var selectedSoftware: [String]
     @Published var softwareInput = ""
+
+    @Published var teamMembers: [TeamMemberRef]
+    @Published var teamMemberSearchQuery = ""
+    @Published var teamMemberResults: [NodiUser] = []
+
+    struct TeamMemberRef: Identifiable, Equatable {
+        let id: String
+        let name: String
+    }
 
     @Published var profilePhoto: UIImage?
     @Published var coverImage: UIImage?
@@ -46,7 +56,9 @@ final class EditProfileViewModel: ObservableObject {
         self.school = user.school
         self.currentCompany = user.currentCompany
         self.availability = user.availability
+        self.accountType = user.accountType
         self.selectedSoftware = user.softwareUsed
+        self.teamMembers = zip(user.teamMemberIds, user.teamMemberNames).map { TeamMemberRef(id: $0, name: $1) }
         self.existingProfilePhotoURL = user.profilePhotoURL
         self.existingCoverImageURL = user.coverImageURL
         self.usernameStatus = .available
@@ -85,6 +97,25 @@ final class EditProfileViewModel: ObservableObject {
         selectedSoftware.removeAll { $0 == name }
     }
 
+    func searchTeamMembers() async {
+        guard !teamMemberSearchQuery.trimmingCharacters(in: .whitespaces).isEmpty else {
+            teamMemberResults = []
+            return
+        }
+        teamMemberResults = (try? await UserRepository.shared.searchUsers(matching: teamMemberSearchQuery)) ?? []
+    }
+
+    func addTeamMember(_ user: NodiUser) {
+        guard let id = user.id, !teamMembers.contains(where: { $0.id == id }) else { return }
+        teamMembers.append(TeamMemberRef(id: id, name: user.displayName))
+        teamMemberSearchQuery = ""
+        teamMemberResults = []
+    }
+
+    func removeTeamMember(_ member: TeamMemberRef) {
+        teamMembers.removeAll { $0.id == member.id }
+    }
+
     var canSave: Bool {
         !displayName.trimmingCharacters(in: .whitespaces).isEmpty && usernameStatus == .available
     }
@@ -112,7 +143,10 @@ final class EditProfileViewModel: ObservableObject {
                 "school": school,
                 "currentCompany": currentCompany,
                 "availability": availability.rawValue,
+                "accountType": accountType.rawValue,
                 "softwareUsed": selectedSoftware,
+                "teamMemberIds": teamMembers.map(\.id),
+                "teamMemberNames": teamMembers.map(\.name),
                 "searchKeywords": NodiUser.buildSearchKeywords(
                     displayName: displayName,
                     username: username,

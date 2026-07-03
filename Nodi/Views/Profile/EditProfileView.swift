@@ -44,6 +44,21 @@ struct EditProfileView: View {
                             }
                             .pickerStyle(.segmented)
                         }
+
+                        VStack(alignment: .leading, spacing: NodiSpacing.xs) {
+                            Text("ACCOUNT TYPE").font(NodiFont.caption(.semibold)).foregroundStyle(NodiColor.secondaryText)
+                            Picker("Account Type", selection: $viewModel.accountType) {
+                                Text("Individual").tag(AccountType.individual)
+                                Text("Studio").tag(AccountType.studio)
+                                Text("Team").tag(AccountType.team)
+                            }
+                            .pickerStyle(.segmented)
+                        }
+                    }
+
+                    if viewModel.accountType != .individual {
+                        Divider().overlay(NodiColor.divider)
+                        teamMembersSection
                     }
 
                     Divider().overlay(NodiColor.divider)
@@ -142,6 +157,49 @@ struct EditProfileView: View {
                     HStack(spacing: NodiSpacing.xxs) {
                         Text(software).font(NodiFont.subheadline())
                         Button { viewModel.removeSoftware(software) } label: {
+                            Image(systemName: "xmark.circle.fill").font(.system(size: 14))
+                        }
+                    }
+                    .padding(.horizontal, NodiSpacing.sm)
+                    .padding(.vertical, NodiSpacing.xxs)
+                    .background(NodiColor.accent.opacity(0.15))
+                    .clipShape(Capsule())
+                    .foregroundStyle(NodiColor.accent)
+                }
+            }
+        }
+    }
+
+    private var teamMembersSection: some View {
+        VStack(alignment: .leading, spacing: NodiSpacing.sm) {
+            Text("Team Members").font(NodiFont.headline())
+            NodiTextField(title: "", text: $viewModel.teamMemberSearchQuery, placeholder: "Search by name or username")
+                .onChange(of: viewModel.teamMemberSearchQuery) { _, _ in
+                    Task { await viewModel.searchTeamMembers() }
+                }
+
+            if !viewModel.teamMemberResults.isEmpty {
+                VStack(spacing: 0) {
+                    ForEach(viewModel.teamMemberResults) { user in
+                        Button {
+                            viewModel.addTeamMember(user)
+                        } label: {
+                            HStack {
+                                NodiAvatarView(urlString: user.profilePhotoURL, size: 32)
+                                Text(user.displayName).foregroundStyle(NodiColor.primaryText)
+                                Spacer()
+                            }
+                            .padding(.vertical, NodiSpacing.xxs)
+                        }
+                    }
+                }
+            }
+
+            FlowLayout(spacing: NodiSpacing.xs) {
+                ForEach(viewModel.teamMembers) { member in
+                    HStack(spacing: NodiSpacing.xxs) {
+                        Text(member.name).font(NodiFont.subheadline())
+                        Button { viewModel.removeTeamMember(member) } label: {
                             Image(systemName: "xmark.circle.fill").font(.system(size: 14))
                         }
                     }

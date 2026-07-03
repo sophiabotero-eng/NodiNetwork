@@ -48,6 +48,15 @@ final class UserRepository {
         ])
     }
 
+    /// Deliberately bypasses `updateUser` (which also stamps `updatedAt`)
+    /// — firestore.rules only lets a *non-owner* bump `profileViewCount`
+    /// when nothing else on the document changes, `updatedAt` included.
+    func incrementProfileView(uid: String) async {
+        try? await usersCollection.document(uid).updateData([
+            "profileViewCount": FieldValue.increment(Int64(1))
+        ])
+    }
+
     func isUsernameAvailable(_ username: String) async throws -> Bool {
         let doc = try await usernamesCollection.document(username.lowercased()).getDocument()
         return !doc.exists

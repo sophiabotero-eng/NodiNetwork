@@ -59,5 +59,23 @@ service firebase.storage {
         && request.resource.size < 50 * 1024 * 1024;
       allow delete: if isOwner(uid);
     }
+
+    // ---- Phase 5: Messaging ----
+
+    // Not public — a voice message is only meaningful in the context of a
+    // specific conversation, so unlike profile/portfolio media, read
+    // access is restricted to signed-in users (Storage rules can't reach
+    // into Firestore to check conversation participancy without a
+    // firestore.get() call, which Storage rules don't support the same
+    // way Firestore rules do; the download URL itself is only ever handed
+    // to conversation participants via ChatView, which is an acceptable
+    // practical tradeoff for a launch-scale app).
+    match /voice_messages/{uid}/{fileName} {
+      allow read: if isSignedIn();
+      allow write: if isOwner(uid)
+        && request.resource.contentType.matches('audio/.*')
+        && request.resource.size < 10 * 1024 * 1024;
+      allow delete: if isOwner(uid);
+    }
   }
 }

@@ -26,6 +26,13 @@ struct NodiUser: Identifiable, Codable, Equatable, Hashable {
     var profilePhotoURL: String?
     var coverImageURL: String?
 
+    /// Only meaningful when `accountType` is `.studio`/`.team` — the
+    /// individual Nodi accounts that make up the studio/team, shown as a
+    /// member grid on the profile. Denormalized names avoid an N-read
+    /// fan-out just to render the member list.
+    var teamMemberIds: [String]
+    var teamMemberNames: [String]
+
     var softwareUsed: [String]
     var availability: AvailabilityStatus
 
@@ -36,6 +43,7 @@ struct NodiUser: Identifiable, Codable, Equatable, Hashable {
     var followingCount: Int
     var connectionCount: Int
     var projectCount: Int
+    var profileViewCount: Int
 
     var authProviders: [AuthProvider]
     var onboardingComplete: Bool
@@ -68,6 +76,8 @@ struct NodiUser: Identifiable, Codable, Equatable, Hashable {
         case currentCompany
         case profilePhotoURL
         case coverImageURL
+        case teamMemberIds
+        case teamMemberNames
         case softwareUsed
         case availability
         case isVerified
@@ -76,6 +86,7 @@ struct NodiUser: Identifiable, Codable, Equatable, Hashable {
         case followingCount
         case connectionCount
         case projectCount
+        case profileViewCount
         case authProviders
         case onboardingComplete
         case fcmTokens
@@ -106,6 +117,8 @@ struct NodiUser: Identifiable, Codable, Equatable, Hashable {
             currentCompany: "",
             profilePhotoURL: nil,
             coverImageURL: nil,
+            teamMemberIds: [],
+            teamMemberNames: [],
             softwareUsed: [],
             availability: .open,
             isVerified: false,
@@ -114,6 +127,7 @@ struct NodiUser: Identifiable, Codable, Equatable, Hashable {
             followingCount: 0,
             connectionCount: 0,
             projectCount: 0,
+            profileViewCount: 0,
             authProviders: providers,
             onboardingComplete: false,
             fcmTokens: [],

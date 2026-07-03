@@ -98,6 +98,22 @@ final class UserRepository {
         return snapshot.documents.compactMap { try? $0.data(as: NodiUser.self) }
     }
 
+    /// Batched by 10 (Firestore's `in` query limit) — used by
+    /// `GraphViewModel` to refresh online status for the handful of
+    /// direct-connection nodes actually visible, rather than denormalizing
+    /// a constantly-changing field onto every connection document.
+    func fetchUsers(ids: [String]) async throws -> [NodiUser] {
+        guard !ids.isEmpty else { return [] }
+        var results: [NodiUser] = []
+        for chunk in stride(from: 0, to: ids.count, by: 10).map({ Array(ids[$0..<min($0 + 10, ids.count)]) }) {
+            let snapshot = try await usersCollection
+                .whereField(FieldPath.documentID(), in: chunk)
+                .getDocuments()
+            results.append(contentsOf: snapshot.documents.compactMap { try? $0.data(as: NodiUser.self) })
+        }
+        return results
+    }
+
     /// A broad, recently-active pool for Discovery to filter client-side
     /// (profession/location/school/company/software/availability). Firestore
     /// can't efficiently combine that many facets server-side without a

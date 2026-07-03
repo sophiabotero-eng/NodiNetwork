@@ -73,6 +73,12 @@ struct ConnectionParticipantSummary: Codable, Equatable, Hashable {
     var username: String
     var photoURL: String?
     var profession: String
+    /// Denormalized at connection-creation time. Verification status
+    /// changes rarely, so this can go briefly stale between when someone
+    /// is verified and when they next form a new connection — acceptable
+    /// for a graph node badge; unlike online status, it's not worth a
+    /// live read per node to keep perfectly fresh.
+    var isVerified: Bool = false
 }
 
 /// Top-level `connections/{id}` collection. `participantIds` always holds

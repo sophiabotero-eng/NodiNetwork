@@ -130,7 +130,15 @@ match /databases/{database}/documents {
   // Functions increment them (Admin SDK, bypasses these rules), so a
   // client can't inflate its own numbers by spamming requests.
   match /connections/{connectionId} {
-    allow read: if isSignedIn() && request.auth.uid in resource.data.participantIds;
+    // Accepted connections are readable by any signed-in user — this is
+    // what lets the Phase 4 graph traverse "friends of friends" at all
+    // (GraphViewModel reads other people's accepted connections to build
+    // out depth-2/3). It's the same visibility model as a public
+    // following list: who you're connected to is not secret, only
+    // whether you have a *pending* request outstanding is, which is why
+    // pending/declined stay restricted to the two participants.
+    allow read: if isSignedIn()
+      && (resource.data.status == 'accepted' || request.auth.uid in resource.data.participantIds);
 
     allow create: if isSignedIn()
       && request.auth.uid in request.resource.data.participantIds

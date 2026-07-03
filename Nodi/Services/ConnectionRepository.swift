@@ -65,13 +65,15 @@ final class ConnectionRepository {
                     displayName: currentUser.displayName,
                     username: currentUser.username,
                     photoURL: currentUser.profilePhotoURL,
-                    profession: currentUser.profession
+                    profession: currentUser.profession,
+                    isVerified: currentUser.isVerified
                 ),
                 targetId: ConnectionParticipantSummary(
                     displayName: targetUser.displayName,
                     username: targetUser.username,
                     photoURL: targetUser.profilePhotoURL,
-                    profession: targetUser.profession
+                    profession: targetUser.profession,
+                    isVerified: targetUser.isVerified
                 )
             ],
             requestedBy: currentId,

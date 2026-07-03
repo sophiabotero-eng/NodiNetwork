@@ -8,6 +8,8 @@ struct ProfileView: View {
     @State private var showingEditProfile = false
     @State private var showingSettings = false
     @State private var showingNotifications = false
+    @State private var showingGraph = false
+    @GestureState private var pinchOutProgress: CGFloat = 0
 
     init(userId: String, isOwnProfile: Bool) {
         _viewModel = StateObject(wrappedValue: ProfileViewModel(userId: userId, isOwnProfile: isOwnProfile))
@@ -22,6 +24,7 @@ struct ProfileView: View {
                 if let user = viewModel.user {
                     VStack(alignment: .leading, spacing: NodiSpacing.md) {
                         identityBlock(user)
+                        graphEntryHint
                         statsRow(user)
                         if !user.bio.isEmpty {
                             Text(user.bio)
@@ -45,6 +48,12 @@ struct ProfileView: View {
             }
         }
         .background(NodiColor.background)
+        .scaleEffect(1 - pinchOutProgress * 0.08)
+        .opacity(1 - pinchOutProgress * 0.5)
+        .gesture(graphEntryGesture)
+        .fullScreenCover(isPresented: $showingGraph) {
+            GraphView(centerUserId: viewModel.userId)
+        }
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             if viewModel.isOwnProfile {
@@ -220,6 +229,49 @@ struct ProfileView: View {
                     .foregroundStyle(NodiColor.secondaryText)
             }
         }
+    }
+
+    /// Pinching outward on the profile is the signature entry into the
+    /// graph, but a gesture-only affordance is invisible (and
+    /// inaccessible to VoiceOver), so this pill gives the same
+    /// destination a discoverable, accessible trigger.
+    private var graphEntryHint: some View {
+        Button {
+            showingGraph = true
+        } label: {
+            Label("View Network Graph", systemImage: "circle.hexagongrid")
+                .font(NodiFont.caption(.semibold))
+                .padding(.horizontal, NodiSpacing.sm)
+                .padding(.vertical, 6)
+                .background(NodiColor.accent.opacity(0.12))
+                .foregroundStyle(NodiColor.accent)
+                .clipShape(Capsule())
+        }
+    }
+
+    /// Pinch-outward (`MagnificationGesture` scale increasing past a
+    /// threshold) transitions into `GraphView`. True cross-presentation
+    /// shared-element geometry (the avatar literally morphing into the
+    /// center node) isn't achievable with `matchedGeometryEffect` across
+    /// a `fullScreenCover` boundary in SwiftUI — that API only animates
+    /// within a single view hierarchy update, not across a modal
+    /// presentation — so this approximates "profile collapses into a
+    /// node" with a coordinated scale-down + fade-out here and a
+    /// scale-up + fade-in on `GraphView`'s side (`appearProgress`),
+    /// timed to the same spring curve so it reads as one continuous motion.
+    private var graphEntryGesture: some Gesture {
+        MagnificationGesture()
+            .updating($pinchOutProgress) { value, state, _ in
+                guard value > 1 else { return }
+                state = min((value - 1) * 1.5, 1)
+            }
+            .onEnded { value in
+                if value > 1.35 {
+                    withAnimation(NodiAnimation.graphTransition) {
+                        showingGraph = true
+                    }
+                }
+            }
     }
 }
 

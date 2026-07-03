@@ -23,13 +23,10 @@ struct MainTabView: View {
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            NavigationStack {
-                ComingSoonView(
-                    icon: "circle.hexagongrid",
-                    title: "Network Graph",
-                    message: "Your interactive connection graph arrives in Phase 4."
-                )
-                .navigationTitle("Graph")
+            Group {
+                if let uid = session.currentUser?.id {
+                    GraphView(centerUserId: uid, showsCloseButton: false)
+                }
             }
             .tabItem { Label("Graph", systemImage: "circle.hexagongrid") }
             .tag(NodiTab.graph)

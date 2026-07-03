@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ⚠️ PLACEHOLDER FIREBASE CONFIG — DO NOT SHIP ⚠️
+
+  This file is a stand-in so the Xcode project builds out of the box.
+  It does NOT point at a real Firebase project. Before running the app:
+
+    1. Go to https://console.firebase.google.com and create (or open) your
+       "Nodi" project.
+    2. Add an iOS app with bundle ID: com.nodinetwork.Nodi
+       (must match `bundleIdPrefix` + target name in project.yml, or
+       whatever bundle ID you set there).
+    3. Download the real GoogleService-Info.plist Firebase generates for you.
+    4. Replace this file at Nodi/Resources/GoogleService-Info.plist with it.
+    5. In the Firebase console, enable: Authentication (Apple, Google,
+       Email/Password providers), Firestore, Storage, Cloud Messaging,
+       and Cloud Functions.
+    6. Deploy firestore.rules, storage.rules, and firestore.indexes.json
+       (see README → "Firebase Setup").
+    7. Deploy the Cloud Functions in /functions (see functions/README.md).
+
+  Until you do this, FirebaseApp.configure() in AppDelegate will either
+  crash at launch or silently fail to authenticate/sync — that is expected
+  with a placeholder config.
+-->
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>000000000000-placeholder.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.000000000000-placeholder</string>
+	<key>API_KEY</key>
+	<string>AIzaSyPLACEHOLDERPLACEHOLDERPLACEHOLDER</string>
+	<key>GCM_SENDER_ID</key>
+	<string>000000000000</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.nodinetwork.Nodi</string>
+	<key>PROJECT_ID</key>
+	<string>nodi-app-placeholder</string>
+	<key>STORAGE_BUCKET</key>
+	<string>nodi-app-placeholder.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false/>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false/>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true/>
+	<key>IS_GCM_ENABLED</key>
+	<true/>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true/>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:000000000000:ios:0000000000000000000000</string>
+</dict>
+</plist>

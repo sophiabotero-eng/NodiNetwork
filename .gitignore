@@ -1,0 +1,42 @@
+# Xcode
+*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+*.xcworkspace/
+xcuserdata/
+DerivedData/
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Package.resolved
+
+# CocoaPods (not used, but ignore if introduced later)
+Pods/
+
+# Firebase — the committed GoogleService-Info.plist is a PLACEHOLDER only.
+# Once you drop in your real one from the Firebase console, DO NOT commit
+# it under a different filename — this ignore rule only protects you if
+# you rename the placeholder aside; the tracked file at
+# Nodi/Resources/GoogleService-Info.plist is intentionally kept in git as
+# a placeholder so the project structure builds out of the box.
+GoogleService-Info.local.plist
+
+# Cloud Functions
+functions/node_modules/
+functions/lib/
+functions/.env
+*.env
+
+# macOS
+.DS_Store
+
+# Fastlane (future App Store automation)
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/test_output

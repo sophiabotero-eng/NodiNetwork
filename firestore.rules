@@ -1,0 +1,82 @@
+rules_version = '2';
+
+// Nodi Firestore security rules.
+//
+// Built up incrementally alongside the client, phase by phase. Each
+// section below is labeled with the phase that introduced it so it's
+// clear why a given rule exists. Fields that should only ever be written
+// by trusted server code (Cloud Functions, which use the Admin SDK and
+// therefore bypass these rules entirely) are explicitly locked out of
+// client writes — see the `isUnchanged`/`lockedFields` helpers.
+
+function isSignedIn() {
+  return request.auth != null;
+}
+
+function isOwner(uid) {
+  return isSignedIn() && request.auth.uid == uid;
+}
+
+// True if none of `fields` changed between the existing doc and the
+// incoming write. Used to protect server-computed counters/flags from
+// being edited directly by a client.
+function unchanged(fields) {
+  return fields.toSet().difference(
+    fields.toSet().intersection(request.resource.data.diff(resource.data).affectedKeys())
+  ) == fields.toSet();
+}
+
+match /databases/{database}/documents {
+
+  // ---- Phase 1: Auth + Profile Foundation ----
+
+  match /users/{uid} {
+    // Profiles are public — Nodi is a portfolio/networking product and
+    // profiles double as public portfolio pages (Phase 5), so anyone
+    // (including signed-out web visitors) can read them.
+    allow read: if true;
+
+    // A user can only ever create/update their own document, and can
+    // never touch the counters or verification flag — those are written
+    // exclusively by Cloud Functions in response to real events (a follow,
+    // a connection, a project being published, manual verification).
+    allow create: if isOwner(uid)
+      && request.resource.data.id == uid
+      && request.resource.data.followerCount == 0
+      && request.resource.data.followingCount == 0
+      && request.resource.data.connectionCount == 0
+      && request.resource.data.projectCount == 0
+      && request.resource.data.isVerified == false;
+
+    allow update: if isOwner(uid)
+      && unchanged(['followerCount', 'followingCount', 'connectionCount', 'projectCount', 'isVerified']);
+
+    // No client-side deletes. Account deletion is handled by a Cloud
+    // Function triggered on Firebase Auth user deletion so we can also
+    // clean up subcollections, storage objects, and reserved usernames.
+    allow delete: if false;
+  }
+
+  // Username reservations. Doc ID is the lowercased username; `uid` field
+  // must match the reserving user. The uniqueness guarantee comes from
+  // the client running this inside a transaction (see
+  // UserRepository.reserveUsername) combined with these rules preventing
+  // anyone from overwriting someone else's reservation.
+  match /usernames/{username} {
+    allow read: if isSignedIn();
+    allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
+    allow delete: if isSignedIn() && resource.data.uid == request.auth.uid;
+    allow update: if false;
+  }
+
+  match /users/{uid}/notifications/{notificationId} {
+    // Only the owner can read their own notifications. Only Cloud
+    // Functions write new ones; the client is only allowed to flip
+    // `isRead`.
+    allow read: if isOwner(uid);
+    allow update: if isOwner(uid) && unchanged([
+      'kind', 'actorId', 'actorDisplayName', 'actorPhotoURL', 'message', 'deepLinkURL', 'createdAt'
+    ]);
+    allow create, delete: if false;
+  }
+}

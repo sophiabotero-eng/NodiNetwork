@@ -1,0 +1,125 @@
+name: Nodi
+options:
+  bundleIdPrefix: com.nodinetwork
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+  developmentLanguage: en
+
+settings:
+  base:
+    SWIFT_VERSION: "5.10"
+    IPHONEOS_DEPLOYMENT_TARGET: "17.0"
+    TARGETED_DEVICE_FAMILY: "1"
+    ENABLE_BITCODE: NO
+    ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+
+packages:
+  Firebase:
+    url: https://github.com/firebase/firebase-ios-sdk
+    from: 10.29.0
+  GoogleSignIn:
+    url: https://github.com/google/GoogleSignIn-iOS
+    from: 7.1.0
+
+targets:
+  Nodi:
+    type: application
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: Nodi
+    resources:
+      - path: Nodi/Resources
+    info:
+      path: Nodi/Resources/Info.plist
+      properties:
+        CFBundleDisplayName: Nodi
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        NSCameraUsageDescription: Nodi uses your camera to scan connection QR codes and capture portfolio media.
+        NSPhotoLibraryUsageDescription: Nodi needs access to your photo library to upload profile photos, cover images, and portfolio media.
+        NSPhotoLibraryAddUsageDescription: Nodi can save shared portfolio images to your photo library.
+        NSMicrophoneUsageDescription: Nodi uses your microphone to record voice messages and video project uploads.
+        NSLocationWhenInUseUsageDescription: Nodi uses your location to show nearby creatives and events for discovery.
+        NSLocationAlwaysAndWhenInUseUsageDescription: Nodi uses your location to show nearby creatives and events, including brief background use after a connection request.
+        NFCReaderUsageDescription: Nodi uses NFC to instantly connect with other creatives when you tap phones.
+        NSUserTrackingUsageDescription: Nodi does not track you across other apps or websites.
+        CFBundleURLTypes:
+          - CFBundleURLSchemes:
+              - nodi
+        LSApplicationQueriesSchemes:
+          - instagram
+          - linkedin
+        UIBackgroundModes:
+          - remote-notification
+        FirebaseAppDelegateProxyEnabled: false
+        ITSAppUsesNonExemptEncryption: false
+    entitlements:
+      path: Nodi/Resources/Nodi.entitlements
+      properties:
+        com.apple.developer.applesignin:
+          - Default
+        com.apple.developer.nfc.readersession.formats:
+          - NDEF
+          - TAG
+        aps-environment: development
+        com.apple.developer.associated-domains:
+          - "applinks:nodi.app"
+          - "webcredentials:nodi.app"
+    dependencies:
+      - package: Firebase
+        product: FirebaseAuth
+      - package: Firebase
+        product: FirebaseFirestore
+      - package: Firebase
+        product: FirebaseFirestoreSwift
+      - package: Firebase
+        product: FirebaseStorage
+      - package: Firebase
+        product: FirebaseMessaging
+      - package: Firebase
+        product: FirebaseFunctions
+      - package: Firebase
+        product: FirebaseAnalytics
+      - package: GoogleSignIn
+        product: GoogleSignIn
+      - package: GoogleSignIn
+        product: GoogleSignInSwift
+    postCompileScripts: []
+
+  NodiTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: NodiTests
+    dependencies:
+      - target: Nodi
+
+  NodiUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: NodiUITests
+    dependencies:
+      - target: Nodi
+
+schemes:
+  Nodi:
+    build:
+      targets:
+        Nodi: all
+        NodiTests: [test]
+        NodiUITests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - NodiTests
+        - NodiUITests
+    archive:
+      config: Release

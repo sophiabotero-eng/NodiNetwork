@@ -1,0 +1,14 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "TEAMID.com.nodinetwork.Nodi",
+        "paths": ["/profile/*", "/graph/*", "/connect/*", "/project/*", "/event/*"]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": ["TEAMID.com.nodinetwork.Nodi"]
+  }
+}
